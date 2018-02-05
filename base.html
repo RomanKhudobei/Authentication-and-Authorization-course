@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{% block meta %}
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	{% endblock %}
+
+	<title>{% block title %}{% endblock %}</title>
+
+	{% block styles %}
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link href="https://fonts.googleapis.com/css?family=Quicksand|Raleway:200|Shrikhand" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+	{% endblock %}
+</head>
+<body>
+	{% block main %}
+		<div id=main>
+		{% block navbar %}
+		<header>
+			<nav class="navbar navbar-default">
+				<div class="container-fluid">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+						</button>
+						<span class="navbar-brand">Restaurant Menu App</span>
+					</div>
+					<div class="collapse navbar-collapse" id="navbar-collapse">
+						<ul class="nav navbar-nav">
+							<li class="borderlist"><a href="{{ url_for('restaurants') }}"><i class="glyphicon glyphicon-home"></i> All Restaurants</a></li>
+						</ul>
+						<ul class="nav navbar-nav navbar-right">
+							<!-- In perspective "Profile" links to profile page with created restaurants and information -->
+							{% if session['provider'] %}
+								<li class="borderlist"><a href="{{ url_for('disconnect') }}"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+							{% else %}
+								<li class="borderlist"><a href="{{ url_for('show_login') }}"><span class="glyphicon glyphicon-log-in"></span> Sign Up</a></li>
+							{% endif %}
+						</ul>
+					</div>
+					<hr>
+				</div>
+			</nav>
+		{% endblock %}
+		{% block header %}
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-12 page-header text-center bottom-shadow" id="restaurant-name">
+						{% block page_header %}
+						{% endblock%}
+					</div>
+				</div>
+				<hr>
+			</div>
+		{% endblock %}
+		</header>
+		{% block content %}
+			<div class="container-fluid" id="content-wrap">
+				{% block flash %}
+					{% with messages = get_flashed_messages(with_categories=True) %}
+						{% if messages %}
+							<div>
+								{% for category, message in messages %}
+									<div class="alert alert-{{ category }} fade in" role="alert">
+										<strong>{{ message }}</strong>
+										<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+								{% endfor %}
+							</div>
+						{% endif %}
+					{% endwith %}
+				{% endblock %}
+
+				{% block menu %}
+				{% endblock %}
+			</div>
+		{% endblock %}
+		{% block footer %}
+		<div class="container-fluid" id="footer">
+			<div class="row">
+				<hr>
+				<div class="col-md-12 text-center footer">
+					<a class="btn btn-link" href="{{ url_for('api') }}">API</a>
+				</div>
+			</div>
+		</div>
+		{% endblock %}
+		{% block scripts %}
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+			<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		{% endblock %}
+		</div>
+	{% endblock %}
+</body>
+</html>
