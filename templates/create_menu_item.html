@@ -1,0 +1,38 @@
+{% extends 'crud.html' %}
+
+{% block title %}
+	Edit Menu Item
+{% endblock %}
+
+{% block form %}
+	<form action="{{ url_for('create_menu_item', restaurant_id=restaurant_id) }}" method="POST">
+		<div class="form-group page-header text-center">
+			<h1><strong>Create New Menu Item</strong></h1>
+		</div>
+		<hr>
+		<div class="form-group form-body">
+			<label>Name:</label>
+			<input type="text" name="new-menu-item-name" class="form-control" required="required" autofocus>
+		</div>
+		<div class="form-group">
+			<label>Price:</label>
+			<input type="text" name="new-menu-item-price" class="form-control">
+			</div>
+		<div class="form-group">
+			<label>Description:</label>
+			<textarea class="form-control" name="new-menu-item-description"></textarea>
+		</div>
+		<div class="form-group">
+			<label for="selection-list">Course:</label>
+			<select class="form-control" id="selection-list" name="new-menu-item-type">
+				<option>Appetizer</option>
+				<option>Entree</option>
+				<option>Dessert</option>
+				<option>Beverage</option>
+			</select>
+		</div>
+		<div class="form-group text-center">
+			<button type="submit" class="btn btn-primary">Create!</button>
+		</div>
+	</form>
+{% endblock %}

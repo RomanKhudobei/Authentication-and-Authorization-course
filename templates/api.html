@@ -1,0 +1,40 @@
+{% extends 'crud.html' %}
+
+{% block title %}
+	API
+{% endblock %}
+
+{% block form %}
+						<div class="page-header text-center">
+							<h1><strong>API Reference</strong></h1>
+						</div>
+						<hr>
+						<div class="form-body api">
+							<p>
+								There are a three types of API calls you can make:
+								<ul>
+									<li>
+										<a href="#api1" data-toggle="collapse">request all menu items by given restaurant id;</a>
+									</li>
+									<div class="collapse" id="api1">
+										<pre>{{ url_for('restaurant_menu_api', restaurant_id=1) }}</pre>
+									</div>
+
+									<li>
+										<a href="#api2" data-toggle="collapse">request single menu item by given id from specified restaurant;</a>
+									</li>
+									<div class="collapse" id="api2">
+										<pre>{{ url_for('single_menu_item_api', restaurant_id=1, menu_id=1) }}</pre>
+									</div>
+
+									<li>
+										<a href="#api3" data-toggle="collapse">request all the restaurants.</a>
+									</li>
+									<div class="collapse" id="api3">
+										<pre>{{ url_for('restaurants_api') }}</pre>
+									</div>
+								</ul>
+							Server returns data in JSON format.
+							</p>
+						</div>
+{% endblock %}

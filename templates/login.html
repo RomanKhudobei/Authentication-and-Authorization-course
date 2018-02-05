@@ -1,0 +1,119 @@
+{% extends 'crud.html' %}
+
+{% block meta %}
+	{{ super() }}
+	<meta name="google-signin-client_id" content="579139604754-psomgvi3p0mli71d4pbshtu2l5dljqr2.apps.googleusercontent.com">
+{% endblock %}
+
+{% block title %}
+	Sign Up
+{% endblock %}
+
+{% block form %}		<!-- it's actually not a form, just uses template from there -->
+	<div class="page-header text-center">
+		<h1><strong>Sign Up</strong></h1>
+	</div>
+	<hr>
+	<div class="text-center form-body">
+		<div id="g-signin-btn">
+			<span class="g-signin"
+				data-scope="openid email"
+				data-clientid="579139604754-psomgvi3p0mli71d4pbshtu2l5dljqr2.apps.googleusercontent.com"
+				data-redirecturi="postmessage"
+				data-accesstype="offline"
+				data-cookiepolicy="single_host_origin"
+				data-callback="signInCallback"
+				data-approvalprompt="force">
+			</span>
+		</div>
+			<fb:login-button
+				class="fb-btn"
+				scope="public_profile,email"
+				onlogin="sendTokenToServer();">
+				<a href="javascript:sendTokenToServer()">Sign in with Facebook</a>
+			</fb:login-button>
+		</div>
+	</div>
+	<!-- #gbtn
+		data-scope - what google resources we want to access
+		data-clientid - your ClientID
+		data-redirecturi - enables one-time use code flow
+		data-accesstype - "offline" means that our server can request data from Google API service even if user not logged in
+		data-cookiepolicy - determines the scope of URI's that can access the cookie. We use "single_host_origin" because our site has only one domain
+		data-callback - specifies callback function
+		data-approvalprompt - "force" means that user has to login each time he visit login page and doesn't check if they already logged.
+								This is useful for debugging you app but you should disable it in production since it gets kind of annoying.
+	-->
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block scripts %}
+	{{ super() }}
+	<script src="https://apis.google.com/js/platform.js?onload=start"></script>
+	<script>
+		function signInCallback(authResult) {
+
+			if (authResult['code']) {
+				$('#g-signin-btn').attr('style', 'display: none');
+
+				// sending one-time code to the server
+				$.ajax({
+					type: 'POST',
+					url: '/gconnect?state={{ STATE }}',
+					processData: false,
+					contentType: 'application/octet-stream; charset=utf-8',
+					data: authResult['code'],
+					success: function(result) {
+								window.location.href = '/restaurants';
+							}
+				});
+
+			} else if (authResult['error']) {
+
+				console.log('There was an error: ' + authResult['error']);
+
+			} else {
+
+				console.log('Failed to make a server-side call. Check your configuration and console.');
+				
+			};
+		};
+
+		// FB SDK
+		window.fbAsyncInit = function() {
+			FB.init({
+				appId: '2032519333691150',
+				cookie: true,	// enable coockies to allow the server to access the session
+				xfbml: true,	// parse social plugins in this page
+				version: 'v2.8'	// version
+			});
+
+			FB.AppEvents.logPageView(); 
+		};
+
+		(function(d, s, id) {
+			var js, fjs = d.getElementsByTagName(s)[0];
+			if (d.getElementById(id)) {return;}
+			js = d.createElement(s); js.id = id;
+			js.src = "https://connect.facebook.net/uk_UA/sdk.js#xfbml=1&version=v2.12&appId=2032519333691150&autoLogAppEvents=1";
+			fjs.parentNode.insertBefore(js, fjs);
+		} (document, 'script', 'facebook-jssdk'));
+
+		function sendTokenToServer() {
+			var access_token = FB.getAuthResponse().accessToken;
+
+			$.ajax({
+				type: 'POST',
+				url: '/fbconnect?state={{ STATE }}',
+				processData: false,
+				data: access_token,
+				contentType: 'application/octet-stream; charset=utf8',
+				success: function(result) {
+					window.location.href = '/restaurants'; 	// just redirecting, any information is implemented through flask flash messages
+				}
+			});
+		};
+	</script>
+{% endblock %}

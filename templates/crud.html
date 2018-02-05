@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock %}
+
+{% block flash %}
+{% endblock %}
+
+{% block content %}
+	{% block menu %}
+		<div class="container-fluid">
+			<div class="row">
+
+				<div class="col-md-2">
+				</div>
+
+				<div class="col-md-8">
+					<div class="panel panel-default crud" id="form">
+						<div class="panel-body">
+							{% block form %}
+							{% endblock %}
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-2">
+				</div>
+
+			</div>
+		</div>
+	{% endblock %}
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

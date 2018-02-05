@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	{{ restaurant.name }} - Menu
+{% endblock %}
+
+{% block page_header %}
+	{{ restaurant.name }}
+{% endblock %}
+
+{% block menu %}
+			<div class="row" id="buttons-bar">
+				{% if owner %}
+					<div class="col-md-2">
+							<a href="{{ url_for('edit_restaurant', restaurant_id=restaurant.id) }}" class="btn btn-warning btn-block btn-outline" role="button"><span class="glyphicon glyphicon-pencil"></span> Edit Restaurant</a>
+					</div>
+					<div class="col-md-2">
+							<a href="{{ url_for('create_menu_item', restaurant_id=restaurant.id) }}" class="btn btn-success btn-block btn-outline" role="button"><span class="glyphicon glyphicon-plus"></span> Add Menu Item</a>
+					</div>
+					<div class="col-md-2">
+							<a href="{{ url_for('delete_restaurant', restaurant_id=restaurant.id) }}" class="btn btn-danger btn-block btn-outline" role="button"><span class="glyphicon glyphicon-trash"></span> Delete Restaurant</a>
+					</div>
+				{% else %}
+					<div class="col-md-2">
+					</div>
+					<div class="col-md-2">
+					</div>
+					<div class="col-md-2">
+					</div>
+				{% endif %}
+				<div class="col-md-4">
+					<div class="input-group" id="search">
+						<input type="text" class="form-control" placeholder="Search..." id="input-search">
+						<div class="input-group-btn">
+							<button class="btn btn-default disabled default" type="submit">
+								<i class="glyphicon glyphicon-search"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2">
+					<div class="btn-group btn-group-justified" id="btn-group">
+						{% set f = request.args.get('f') %}
+
+						<div class="dropdown">
+							<button class="btn btn-primary dropdown-toggle btn-block" type="button" data-toggle="dropdown">
+								Filter &nbsp;<span class="glyphicon glyphicon-menu-down"></span>
+							</button>
+							<ul class="dropdown-menu">
+								<li {% if f == None %} class="active btn-group-justified" {% endif %}>
+									<a href="{{ url_for('restaurant_menu', restaurant_id=restaurant.id) }}">All</a>
+								</li>
+								<li {% if f == 'Appetizer' %} class="active btn-group-justified" {% endif %}>
+									<a href="{{ url_for('restaurant_menu', restaurant_id=restaurant.id, f='Appetizer') }}">Appetizers</a>
+								</li>
+								<li {% if f == 'Entree' %} class="active btn-group-justified" {% endif %}>
+									<a href="{{ url_for('restaurant_menu', restaurant_id=restaurant.id, f='Entree') }}">Entrees</a>
+								</li>
+								<li {% if f == 'Dessert' %} class="active btn-group-justified" {% endif %}>
+									<a href="{{ url_for('restaurant_menu', restaurant_id=restaurant.id, f='Dessert') }}">Desserts</a>
+								</li>
+								<li {% if f == 'Beverage' %} class="active btn-group-justified" {% endif %}>
+									<a href="{{ url_for('restaurant_menu', restaurant_id=restaurant.id, f='Beverage') }}">Beverages</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+				</div>
+				<div class="col-md-8 panel-group" id="accordion">
+
+						<ul class="list-group list-unstyled" id="list-of-items">
+						{% for item in items %}
+							{% if request.args %}
+								{% if f == item.course %}
+									<li>
+									<div class="row well panel panel-default menu-item-entry">
+
+											<div class="row panel-heading">
+												<div class="col-md-12 panel-title">
+													<h3>
+														<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ item.id }}">
+															<span class="pull-left menu-item-name">{{ item.name }}</span>
+														</a>
+														<span class="pull-right menu-item-price">{{ item.price }}</span>
+													</h3>
+												</div>
+											</div>
+											<div class="row panel-collapse collapse" id="collapse{{ item.id }}">
+												<hr>
+												<div class="col-md-12 panel-body">
+													<div class="row">
+														<div class="col-md-12">
+															<p><h4><span class="menu-item-description">{{ item.description }}</span></h4></p>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-md-6 text-muted">
+															{{ item.course }}
+														</div>
+														<div class="col-md-6">
+															{% if owner %}
+																<div class="btn-group navbar-right" role="group" id="edit-delete-buttons">
+																	<a href="{{ url_for('edit_menu_item', restaurant_id=restaurant.id, menu_id=item.id) }}" class="btn btn-warning btn-outline btn-xs" role="button">&nbsp;Edit&nbsp;</a>
+																	<a href="{{ url_for('delete_menu_item', restaurant_id=restaurant.id, menu_id=item.id) }}" class="btn btn-danger btn-outline btn-xs" role="button">Delete</a>
+																</div>
+															{% endif %}
+														</div>
+													</div>
+												</div>								
+											</div>
+
+									</div>
+									</li>
+								{% endif %}
+							{% else %}
+								<li>
+								<div class="row well panel panel-default menu-item-entry">
+
+										<div class="row panel-heading">
+											<div class="col-md-12 panel-title">
+												<h3>
+													<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ item.id }}">
+														<span class="pull-left menu-item-name">{{ item.name }}</span>
+													</a>
+													<span class="pull-right menu-item-price">{{ item.price }}</span>
+												</h3>
+											</div>
+										</div>
+										<div class="row panel-collapse collapse" id="collapse{{ item.id }}">
+											<hr>
+											<div class="col-md-12 panel-body">
+												<div class="row">
+													<div class="col-md-12">
+														<p><h4><span class="menu-item-description">{{ item.description }}</span></h4></p>
+													</div>
+												</div>
+												<div class="row">
+													<div class="col-md-6 text-muted">
+														{{ item.course }}
+													</div>
+													<div class="col-md-6">
+														{% if owner %}
+															<div class="btn-group navbar-right" role="group" id="edit-delete-buttons">
+																<a href="{{ url_for('edit_menu_item', restaurant_id=restaurant.id, menu_id=item.id) }}" class="btn btn-warning btn-outline btn-xs" role="button">&nbsp;Edit&nbsp;</a>
+																<a href="{{ url_for('delete_menu_item', restaurant_id=restaurant.id, menu_id=item.id) }}" class="btn btn-danger btn-outline btn-xs" role="button">Delete</a>
+															</div>
+														{% endif %}
+													</div>
+												</div>
+											</div>								
+										</div>
+
+								</div>
+								</li>
+							{% endif %}
+						{% else %}
+							<div class="text-center">
+								No items to display
+							</div>						
+						{% endfor %}
+						</ul>
+				</div>
+				<div class="col-md-2">
+				</div>
+			</div>
+
+{% endblock %}
+
+{% block scripts %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='js/funcs.js') }}"></script>
+{% endblock %}

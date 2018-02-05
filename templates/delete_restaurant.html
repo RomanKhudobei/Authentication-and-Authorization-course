@@ -1,0 +1,18 @@
+{% extends 'crud.html' %}
+
+{% block title %}
+	Delete Restaurant
+{% endblock %}
+
+{% block form %}
+					<form action="{{ url_for('delete_restaurant', restaurant_id=restaurant.id) }}" method="POST">
+						<div class="form-group page-header text-center">
+							<h1><strong>Are you sure you want to delete {{ restaurant.name }}?</strong></h1>
+						</div>
+						<hr>
+						<div class="form-group text-center form-body">
+							<button type="submit" class="btn btn-danger">Delete</button>
+							<a href="{{ url_for('restaurant_menu', restaurant_id=restaurant.id) }}" class="btn btn-default" role="button">Cancel</a>
+						</div>
+					</form>
+{% endblock %}
