@@ -16,7 +16,9 @@ import json
 from flask import make_response
 import requests
 
+
 app = Flask(__name__)
+app.secret_key = 'ASKJDH!@&hogsdrf0126734lkjughSADFLTGQWEO218734'
 
 engine = create_engine('sqlite:///restaurantmenu_with_users.db')
 Base.metadata.bind = engine
@@ -34,7 +36,7 @@ def show_login():
 		flash('Current user is already connected', 'info')
 		return redirect( url_for('restaurants') )
 
-	state = ''.join( random.choice(string.ascii_uppercase + string.digits) for x in xrange(32) )
+	state = ''.join( random.choice(string.ascii_uppercase + string.digits) for x in range(32) )
 	login_session['state'] = state
 	return render_template('login.html', STATE=state)
 
@@ -142,7 +144,7 @@ def gconnect():
 
 	login_session['user_id'] = user_id
 
-	flash('Successfully logged in as ' + unicode(login_session['username'], 'utf-8') + '!', 'success')
+	flash('Successfully logged in as ' + login_session['username'].decode('utf-8') + '!', 'success')
 
 	response = make_response(json.dumps('Successfully logged in'), 200)
 	response.headers['Content-Type'] = 'application/json'
@@ -190,15 +192,15 @@ def fbconnect():
 	app_secret = fb_client_secrets['app_secret']
 
 	url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id={}&client_secret={}&fb_exchange_token={}'
-	url = url.format(app_id, app_secret, access_token)
+	url = url.format(app_id, app_secret, access_token.decode('utf-8'))
 
 	h = httplib2.Http()
-	result = h.request(url, 'GET')[1]
+	result = h.request(url, 'GET')[1].decode('utf-8')
 
 	token = result.split(',')[0].split(':')[1].replace('"', '')
 	login_session['fb_access_token'] = token
 
-	userinfo_url = 'https://graph.facebook.com/v2.8/me?access_token={}&fields=name,id,email'.format(token)
+	userinfo_url = 'https://graph.facebook.com/v2.12/me?access_token={}&fields=name,id,email'.format(token)
 	result = h.request(userinfo_url, 'GET')[1]
 	data = json.loads(result)
 
@@ -220,7 +222,7 @@ def fbconnect():
 	login_session['email'] = data.get('email')
 	login_session['fb_id'] = fb_id
 
-	picture_request_url = 'https://graph.facebook.com/v2.8/me/picture?access_token={}&redirect=0&height=200&width=200'.format(token)
+	picture_request_url = 'https://graph.facebook.com/v2.12/me/picture?access_token={}&redirect=0&height=200&width=200'.format(token)
 	result = h.request(picture_request_url, 'GET')[1]
 	data = json.loads(result)
 
@@ -288,6 +290,9 @@ def restaurants():
 def create_restaurant():
 	authenticated = is_logged(login_session)
 
+	if not authenticated:
+		return redirect( url_for('show_login') )
+
 	if request.method == 'POST':
 		restaurant_name = request.form.get('new-restaurant-name')
 		new_restaurant = Restaurant(name=restaurant_name,
@@ -301,15 +306,14 @@ def create_restaurant():
 		return redirect( url_for('restaurants') )
 
 	elif request.method == 'GET':
-
-		if not authenticated:
-			return redirect( url_for('show_login') )
-
 		return render_template('create_restaurant.html')
 
 @app.route('/restaurants/<int:restaurant_id>/delete', methods=['GET', 'POST'], strict_slashes=False)
 def delete_restaurant(restaurant_id):
 	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
+
+	if not permission(login_session, restaurant):
+		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
 
 	if request.method == 'POST':
 
@@ -327,14 +331,14 @@ def delete_restaurant(restaurant_id):
 		return redirect( url_for('restaurants') )
 
 	elif request.method == 'GET':
-		if not permission(login_session, restaurant):
-			return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
-
 		return render_template('delete_restaurant.html', restaurant=restaurant)
 
 @app.route('/restaurants/<int:restaurant_id>/edit', methods=['GET', 'POST'], strict_slashes=False)
 def edit_restaurant(restaurant_id):
 	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
+
+	if not permission(login_session, restaurant):
+		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
 
 	if request.method == 'POST':
 
@@ -350,9 +354,6 @@ def edit_restaurant(restaurant_id):
 		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
 
 	elif request.method == 'GET':
-		if not permission(login_session, restaurant):
-			return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
-
 		return render_template('edit_restaurant.html', restaurant=restaurant)
 
 @app.route('/restaurants/<int:restaurant_id>', strict_slashes=False)
@@ -371,6 +372,12 @@ def restaurant_menu(restaurant_id):
 
 @app.route('/restaurants/<int:restaurant_id>/menu/new', methods=['GET', 'POST'], strict_slashes=False)
 def create_menu_item(restaurant_id):
+	
+	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
+
+	if not permission(login_session, restaurant):
+		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
+
 	if request.method == 'POST':
 
 		new_menu_item = MenuItem(name=request.form['new-menu-item-name'],
@@ -388,15 +395,15 @@ def create_menu_item(restaurant_id):
 		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
 
 	elif request.method == 'GET':
-		restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
-
-		if not permission(login_session, restaurant):
-			return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
-
 		return render_template('create_menu_item.html', restaurant_id=restaurant_id)
 
 @app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/edit', methods=['GET', 'POST'], strict_slashes=False)
 def edit_menu_item(restaurant_id, menu_id):
+	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
+
+	if not permission(login_session, restaurant):
+		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
+
 	OPTIONS = ['Appetizer', 'Entree', 'Dessert', 'Beverage']
 
 	menu_item = session.query(MenuItem).filter_by(id=menu_id).first()
@@ -416,15 +423,16 @@ def edit_menu_item(restaurant_id, menu_id):
 		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
 
 	elif request.method == 'GET':
-		restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
-
-		if not permission(login_session, restaurant):
-			return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
-
 		return render_template('edit_menu_item.html', restaurant_id=restaurant_id, menu_item=menu_item, options=OPTIONS)
 
 @app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/delete', methods=['GET', 'POST'], strict_slashes=False)
 def delete_menu_item(restaurant_id, menu_id):
+
+	restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
+
+	if not permission(login_session, restaurant):
+		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
+
 	menu_item = session.query(MenuItem).filter_by(id=menu_id).first()
 
 	if request.method == 'POST':
@@ -436,11 +444,6 @@ def delete_menu_item(restaurant_id, menu_id):
 		return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
 
 	elif request.method == 'GET':
-		restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
-
-		if not permission(login_session, restaurant):
-			return redirect( url_for('restaurant_menu', restaurant_id=restaurant_id) )
-
 		return render_template('delete_menu_item.html', restaurant_id=restaurant_id, menu_item=menu_item)
 
 @app.route('/api', strict_slashes=False)
@@ -517,9 +520,3 @@ def permission(login_session, restaurant):
 		flash('Access denied', 'danger')
 		return False
 	return True
-
-
-if __name__ == '__main__':
-	app.secret_key = 'super_secret_key'
-	app.debug = True
-	app.run(host='0.0.0.0', port=5000)
