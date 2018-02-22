@@ -25,13 +25,82 @@
 				data-callback="signInCallback"
 				data-approvalprompt="force">
 			</span>
+			<script>
+				function signInCallback(authResult) {
+
+					if (authResult['code']) {
+						$('#g-signin-btn').attr('style', 'display: none');
+
+						// sending one-time code to the server
+						$.ajax({
+							type: 'POST',
+							url: '/gconnect?state={{ STATE }}',
+							crossDomain: true,
+							processData: false,
+							contentType: 'application/octet-stream; charset=utf-8',
+							data: authResult['code'],
+							success: function(result) {
+										window.location.href = '/restaurants';
+									}
+						});
+
+					} else if (authResult['error']) {
+
+						console.log('There was an error: ' + authResult['error']);
+
+					} else {
+
+						console.log('Failed to make a server-side call. Check your configuration and console.');
+						
+					};
+				};
+			</script>
 		</div>
-			<fb:login-button
-				class="fb-btn"
-				scope="public_profile,email"
-				onlogin="sendTokenToServer();">
-				<a href="javascript:sendTokenToServer()">Sign in with Facebook</a>
-			</fb:login-button>
+		<div>
+			<script>
+				// FB SDK
+				window.fbAsyncInit = function() {
+					FB.init({
+						appId: '2032519333691150',
+						cookie: true,	// enable coockies to allow the server to access the session
+						xfbml: true,	// parse social plugins in this page
+						version: 'v2.12'	// version
+					});
+
+					FB.AppEvents.logPageView(); 
+				};
+
+				(function(d, s, id) {
+					var js, fjs = d.getElementsByTagName(s)[0];
+					if (d.getElementById(id)) return;
+					js = d.createElement(s); js.id = id;
+					js.src = 'https://connect.facebook.net/uk_UA/sdk.js#xfbml=1&version=v2.12&appId=2032519333691150&autoLogAppEvents=1';
+					fjs.parentNode.insertBefore(js, fjs);
+				}(document, 'script', 'facebook-jssdk'));
+
+				function checkLoginState() {
+					FB.getLoginStatus(function(response) {
+						if (response.status === 'connected') {
+							var access_token = response.authResponse.accessToken;
+							sendTokenToServer(access_token);
+						};
+					});
+				};
+
+				function sendTokenToServer(access_token) {
+					$.ajax({
+						type: 'POST',
+						url: '/fbconnect?state={{ STATE }}',
+						processData: false,
+						data: access_token,
+						contentType: 'application/octet-stream; charset=utf8',
+						success: function(result) {
+							window.location.href = '/restaurants'; 	// just redirecting, any information is implemented through flask flash messages
+						}
+					});
+				};
+			</script>
+			<div id="fb-login-button" class="fb-login-button" scope="public_profile,email" data-max-rows="1" data-size="medium" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false" onlogin="checkLoginState();"></div>
 		</div>
 	</div>
 	<!-- #gbtn
@@ -52,68 +121,4 @@
 {% block scripts %}
 	{{ super() }}
 	<script src="https://apis.google.com/js/platform.js?onload=start"></script>
-	<script>
-		function signInCallback(authResult) {
-
-			if (authResult['code']) {
-				$('#g-signin-btn').attr('style', 'display: none');
-
-				// sending one-time code to the server
-				$.ajax({
-					type: 'POST',
-					url: '/gconnect?state={{ STATE }}',
-					processData: false,
-					contentType: 'application/octet-stream; charset=utf-8',
-					data: authResult['code'],
-					success: function(result) {
-								window.location.href = '/restaurants';
-							}
-				});
-
-			} else if (authResult['error']) {
-
-				console.log('There was an error: ' + authResult['error']);
-
-			} else {
-
-				console.log('Failed to make a server-side call. Check your configuration and console.');
-				
-			};
-		};
-
-		// FB SDK
-		window.fbAsyncInit = function() {
-			FB.init({
-				appId: '2032519333691150',
-				cookie: true,	// enable coockies to allow the server to access the session
-				xfbml: true,	// parse social plugins in this page
-				version: 'v2.8'	// version
-			});
-
-			FB.AppEvents.logPageView(); 
-		};
-
-		(function(d, s, id) {
-			var js, fjs = d.getElementsByTagName(s)[0];
-			if (d.getElementById(id)) {return;}
-			js = d.createElement(s); js.id = id;
-			js.src = "https://connect.facebook.net/uk_UA/sdk.js#xfbml=1&version=v2.12&appId=2032519333691150&autoLogAppEvents=1";
-			fjs.parentNode.insertBefore(js, fjs);
-		} (document, 'script', 'facebook-jssdk'));
-
-		function sendTokenToServer() {
-			var access_token = FB.getAuthResponse().accessToken;
-
-			$.ajax({
-				type: 'POST',
-				url: '/fbconnect?state={{ STATE }}',
-				processData: false,
-				data: access_token,
-				contentType: 'application/octet-stream; charset=utf8',
-				success: function(result) {
-					window.location.href = '/restaurants'; 	// just redirecting, any information is implemented through flask flash messages
-				}
-			});
-		};
-	</script>
 {% endblock %}
